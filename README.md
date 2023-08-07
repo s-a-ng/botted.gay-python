@@ -4,7 +4,7 @@
 ```
 ## Usage
 ```py
-import BotPool
+import botteddotgay as BotPool
 import asyncio
 
 async def main():
