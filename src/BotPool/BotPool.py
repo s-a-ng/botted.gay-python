@@ -80,7 +80,6 @@ class Connection:
         websocket = self.Websocket
         while True:
             message = await websocket.recv()
-            #print(message)
             try:
                 message = json.loads(message)
                 MessageId = message.get("MessageId")
@@ -121,8 +120,6 @@ class Connection:
             "API_KEY" : self.API_KEY
         })
         await self.Websocket.send(Payload)
-        print(Payload)
-
 
 
 class Bot:
