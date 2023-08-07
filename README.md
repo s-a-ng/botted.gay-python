@@ -1,6 +1,6 @@
 ## Installation
 ```
->>> pip install git+https://github.com/s-a-ng/botted.gay-python.git
+pip install git+https://github.com/s-a-ng/botted.gay-python.git
 ```
 ## Usage
 ```py
