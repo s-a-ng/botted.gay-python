@@ -9,7 +9,7 @@ import asyncio
 
 async def main():
     BotPoolObject =  BotPool(
-        API_KEY = "BOTTED-GAY-yertyertretertghxhgfhherhrythtyjnteyjytjn"
+        API_KEY = "BOTTED-GAY-apikeyhere"
     )
 
     await BotPoolObject.init()
