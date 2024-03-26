@@ -14,10 +14,16 @@ UUID_To_Bots = {}
 
 def NewAccount(Body):
     BotUUID = Body["UUID"]
-    UserId = Body["UserId"]
+    NewUserId = Body["UserId"]
     Bot = UUID_To_Bots[BotUUID]
 
-    Bot.UserId = UserId
+
+
+    Bot.UserId = NewUserId
+    Bot.Joined = False
+
+    if Bot.BotDisconnectedCallback:
+        Bot.BotDisconnectedCallback("KICKED")
 
 def BotJoined(Body):
     Username = Body["Username"]
@@ -45,9 +51,13 @@ def RefreshUUID(Body):
         BotObject = UUID_To_Bots[Old]
 
         BotObject.UUID = New
-
+        BotObject.Joined = False
+        
         UUID_To_Bots[Old] = None
         UUID_To_Bots[New] = BotObject
+
+        if BotObject.BotDisconnectedCallback:
+            BotObject.BotDisconnectedCallback("NODE_SHUTDOWN")
 
 
 Interceptions = {
@@ -83,13 +93,16 @@ class Connection:
             try:
                 message = json.loads(message)
                 MessageId = message.get("MessageId")
+
+                if MessageId: 
+                    self.OutgoingMessages[MessageId] = Body
+                    continue 
+
                 Body = message.get("Body")
                 Operation = message.get("Operation")
 
-                if MessageId:
-                    self.OutgoingMessages[MessageId] = Body
-                else:
-                    self.__handle_interceptions(Operation, Body)
+                self.__handle_interceptions(Operation, Body)
+
             except json.JSONDecodeError:
                 logging.error(message)
 
@@ -120,6 +133,8 @@ class Connection:
             "API_KEY" : self.API_KEY
         })
         await self.Websocket.send(Payload)
+        print(Payload)
+
 
 
 class Bot:
@@ -130,7 +145,6 @@ class Bot:
             "Chat",
             "Tell",
             "Disconnect",
-            "SetMemory",
         ]
 
         self.UUID = kwargs["UUID"]
@@ -166,13 +180,6 @@ class Bot:
             "BotUUID": self.UUID,
             "Body": Code,
         })
-
-    async def GetMemory(self, Key):
-        return self.Connection.AskServerTwoWay("operate", {
-            "BotOperation" : "GetMemory",
-            "BotUUID": self.UUID,
-            "Body": Key,
-        })["Value"]
 
     async def Launch(self, **kwargs):
         PlaceId = kwargs["PlaceId"]
@@ -233,10 +240,10 @@ class BotPool:
 
     async def GetAccountStatus(self):
         if not self.Inited:
-            logging.error("Bot Pool is not initialized")
+            logging.error("Bot Pool is not initialized ( call BotPool.init() )")
         return await self.Connection.AskServerTwoWay("AccountStatus")
 
     async def GetPoolStatus(self):
         if not self.Inited:
-            logging.error("Bot Pool is not initialized")
+            logging.error("Bot Pool is not initialized ( call BotPool.init() )")
         return await self.Connection.AskServerTwoWay("PoolStatus")
